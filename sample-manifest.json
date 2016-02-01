@@ -1,0 +1,48 @@
+{
+	"GET": {
+		"default": "index",
+		"index": {
+			"view": {
+				"instanceOf": "Transphporm\\Builder",
+				"constructParams": [ 
+					"Layouts/admin.xml",
+					"{dir}/view/index.tss"
+				]
+			}
+		},
+		"edit": {
+			"view": {
+				"instanceOf": "Transphporm\\Builder",
+				"constructParams": [ 
+					"Layouts/admin.xml",
+					"{dir}/view/edit.tss"
+				]
+			},
+			"controller": {"instanceOf": "Level2\\MVC\\Controller\\Form"},
+			"model": {
+				"instanceOf": "Admin\\Model\\Edit",
+				"substitutions": {"Maphper\\Maphper": {"instance": ["MaphperLoader\\Loader", "getMapper"], "params": ["blogs"]}}
+			},
+			"action": "$1",
+			"defaultAction": "main"
+		}
+	},
+	"POST": {
+		"edit": {
+			"view": {
+				"instanceOf": "Transphporm\\Builder",
+				"constructParams": [ 
+					"Layouts/admin.xml",
+					"{dir}/view/edit.tss"
+				]
+			},
+			"controller": {"instanceOf": "Level2\\MVC\\Controller\\Form"},
+			"model": {
+				"instanceOf": "Admin\\Model\\Edit",
+				"substitutions": {"Maphper\\Maphper": {"instance": ["MaphperLoader\\Loader", "getMapper"], "params": ["blogs"]}}
+			},
+			"action": "$1",
+			"defaultAction": "submit"
+		}
+	}
+}
