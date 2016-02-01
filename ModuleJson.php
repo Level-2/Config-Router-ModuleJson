@@ -53,7 +53,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 				$controllerRule['call'] = [];
 
 				$controllerRule['call'][] = [$action, $route];
-				$this->dice->addRule('$Controller', $controllerRule);
+				$this->dice->addRule('$controller', $controllerRule);
 				$controller = $this->dice->create('$controller', [], [$model, $this->request]);
 			}
 			else $controller = null;
