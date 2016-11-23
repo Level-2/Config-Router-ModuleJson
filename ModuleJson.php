@@ -28,43 +28,48 @@ class ModuleJson  implements \Level2\Router\Rule {
 		else $routeName = array_shift($route);
 
 		if (isset($config->$method->$routeName)) {
-			//Store the original directory
-
-			//chdir into the module folder so all includes are relative
-
 			$matchedRoute = $config->$method->$routeName;
-			$this->dice->addRule('$View', (array) $matchedRoute->view);
 
-			if (isset($matchedRoute->model)) {
-				$this->dice->addRule('$Model',  json_decode(json_encode($matchedRoute->model), true));
-				$model = $this->dice->create('$Model', [], [$this->request]);
+			// This allows POST to inherit from GET if "inherit" : "GET" is set (or vice versa)
+			if (isset($matchedRoute['inherit']) && isset($config->{$matchedRoute['inherit']}->$routeName)) {
+				$inheritMethod = $matchedRoute['inherit'];
+				$matchedRoute = (object) array_merge((array)$matchedRoute, (array)$config->$inheritMethod->$routeName);
 			}
-			else $model = null;
 
-			if (isset($matchedRoute->controller)) {
-
-				$controllerRule = (array) $matchedRoute->controller;
-
-				if ($matchedRoute->action == '$1') {
-					$action = isset($route[0]) && method_exists($controllerRule['instanceOf'], $route[0]) ? array_shift($route) : $matchedRoute->defaultAction;	
-				}
-				else $action = $mathedRoute->action;
-				
-				$controllerRule['call'] = [];
-
-				$controllerRule['call'][] = [$action, $route];
-				$this->dice->addRule('$controller', $controllerRule);
-				$controller = $this->dice->create('$controller', [], [$model, $this->request]);
-			}
-			else $controller = null;
-			
-			
-			$view = $this->dice->create('$View');
-
-			$route = new \Level2\Router\Route($model, $view, $controller, getcwd());
-			return $route;
+			return $this->getRoute($matchedRoute);
 		}
 	}
+
+	private function getRoute(array $routeSettings) {
+		$this->dice->addRule('$View', (array) $routeSettings->view);
+
+		if (isset($routeSettings->model)) {
+			$this->dice->addRule('$Model',  json_decode(json_encode($routeSettings->model), true));
+			$model = $this->dice->create('$Model', [], [$this->request]);
+		}
+		else $model = null;
+
+		if (isset($routeSettings->controller)) {
+
+			$controllerRule = (array) $routeSettings->controller;
+
+			if ($routeSettings->action == '$1') {
+				$action = isset($route[0]) && method_exists($controllerRule['instanceOf'], $route[0]) ? array_shift($route) : $routeSettings->defaultAction;
+			}
+			else $action = $mathedRoute->action;
+
+			$controllerRule['call'] = [];
+
+			$controllerRule['call'][] = [$action, $route];
+			$this->dice->addRule('$controller', $controllerRule);
+			$controller = $this->dice->create('$controller', [], [$model, $this->request]);
+		}
+		else $controller = null;
+
+
+		$view = $this->dice->create('$View');
+
+		$route = new \Level2\Router\Route($model, $view, $controller, getcwd());
+		return $route;
+	}
 }
-
-
