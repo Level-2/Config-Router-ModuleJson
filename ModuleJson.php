@@ -7,18 +7,21 @@ class ModuleJson  implements \Level2\Router\Rule {
 	private $jsonLoader;
 	private $request;
 
-	public function __construct(\Dice\Dice $dice, \Level2\Core\Request $request, \Dice\Loader\Json $jsonLoader, $moduleDir = 'Modules', $configFile = 'manifest.json', $defaultConfig = 'Conf/Dice/Module.json') {
+	public function __construct(\Dice\Dice $dice, \Level2\Core\Request $request, $moduleDir = 'Modules', $configFile = 'manifest.json') {
 		$this->dice = $dice;
-		$this->jsonLoader = $jsonLoader;
 		$this->moduleDir = $moduleDir;
 		$this->configFile = $configFile;
 		$this->request = $request;
 	}
 
 	public function find(array $route) {
-		if (count($route) == 0 || $route[0] == '') return false;
-		else if (file_exists($this->moduleDir . '/' . $route[0] . '/' . $this->configFile)) $config = json_decode(str_replace('{dir}', $this->moduleDir . '/' . $route[0], file_get_contents($this->moduleDir . '/' . $route[0] . '/' . $this->configFile)));
-		else return false;
+		if (!($config = $this->getRouteModuleFile($route))) return false;
+
+		// Extend property
+		if (isset($route->extend)) {
+			$extended = $this->getRouteModuleFile([$route->extend]);
+			$config = (object) array_merge((array)$extended, (array)$config);
+		}
 
 		$moduleName = array_shift($route);
 
@@ -38,6 +41,18 @@ class ModuleJson  implements \Level2\Router\Rule {
 
 			return $this->getRoute($matchedRoute);
 		}
+	}
+
+	private function getRouteDir($moduleName) {
+		return $this->moduleDir . '/' . $moduleName;
+	}
+
+	private function getRouteModuleFile(array $route) {
+		if (count($route) == 0 || $route[0] == '') return false;
+		$directory = $this->getRouteDir($route[0]);
+		$file = $directory . '/' . $this->configFile;
+		if (file_exists($file)) return json_decode(str_replace('{dir}', $directory, file_get_contents($file)));
+		else return false;
 	}
 
 	private function getRoute(array $routeSettings) {
