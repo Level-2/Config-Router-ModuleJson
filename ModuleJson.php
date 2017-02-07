@@ -15,16 +15,9 @@ class ModuleJson  implements \Level2\Router\Rule {
 	}
 
 	public function find(array $route) {
-		if (!($config = $this->getRouteModuleFile($route))) return false;
+		if (count($route) == 0 || $route[0] == '') return false;
 
-		// Extend property
-		if (isset($route->extend)) {
-			$extended = $this->getRouteModuleFile([$route->extend]);
-			$config = (object) array_merge((array)$extended, (array)$config);
-		}
-
-		$moduleName = array_shift($route);
-
+        $config = $this->getConfig($route);
 		$method = $this->request->server('REQUEST_METHOD');
 
 		if ($route[0] == '') $routeName = isset($config->$method->defaultRoute) ? $config->$method->defaultRoute : 'index';
@@ -47,11 +40,25 @@ class ModuleJson  implements \Level2\Router\Rule {
 		return $this->moduleDir . '/' . $moduleName;
 	}
 
-	private function getRouteModuleFile(array $route) {
-		if (count($route) == 0 || $route[0] == '') return false;
-		$directory = $this->getRouteDir($route[0]);
-		$file = $directory . '/' . $this->configFile;
-		if (file_exists($file)) return json_decode(str_replace('{dir}', $directory, file_get_contents($file)));
+    public function getConfig(&$route) {
+        $moduleName = array_shift($route);
+
+        $directory = $this->getRouteDir($moduleName);
+        $file = $directory . '/' . $this->configFile;
+        return $this->getRouteModuleFile($file);
+    }
+
+	private function getRouteModuleFile($file) {
+		if (file_exists($file)) {
+			$config = json_decode(str_replace('{dir}', dirname($file), file_get_contents($file)));
+
+			// Extend property
+			if (isset($route->extend)) {
+				$extended = $this->getRouteModuleFile($directory . DIRECTORY_SEPARATOR . $route->extend);
+				$config = (object) array_merge((array)$extended, (array)$config);
+			}
+			return $config;
+		}
 		else return false;
 	}
 
