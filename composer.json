@@ -1,5 +1,5 @@
 {
-    "name": "level-2/Router-ModuleJson",
+    "name": "level-2/router-modulejson",
     "description": "An implementation of a JSON configured router for the Level-2 framework",
     "license": "BSD-2-Clause",
     "homepage": "https://github.com/Level-2/Router-ModuleJson",
