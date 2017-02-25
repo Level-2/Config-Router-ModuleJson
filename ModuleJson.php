@@ -20,19 +20,20 @@ class ModuleJson  implements \Level2\Router\Rule {
         $config = $this->getConfig($route);
 		$method = $this->request->server('REQUEST_METHOD');
 
-		if ($route[0] == '') $routeName = isset($config->$method->defaultRoute) ? $config->$method->defaultRoute : 'index';
+
+		if (!isset($route[0]) || (isset($route[0]) && $route[0] == '')) $routeName = isset($config->$method->defaultRoute) ? $config->$method->defaultRoute : 'index';
 		else $routeName = array_shift($route);
 
 		if (isset($config->$method->$routeName)) {
 			$matchedRoute = $config->$method->$routeName;
 
 			// This allows POST to inherit from GET if "inherit" : "GET" is set (or vice versa)
-			if (isset($matchedRoute['inherit']) && isset($config->{$matchedRoute['inherit']}->$routeName)) {
-				$inheritMethod = $matchedRoute['inherit'];
+			if (isset($matchedRoute->inherit) && isset($config->{$matchedRoute->inherit}->$routeName)) {
+				$inheritMethod = $matchedRoute->inherit;
 				$matchedRoute = (object) array_merge((array)$matchedRoute, (array)$config->$inheritMethod->$routeName);
 			}
 
-			return $this->getRoute($matchedRoute);
+			return $this->getRoute($matchedRoute, $route);
 		}
 	}
 
@@ -62,7 +63,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 		else return false;
 	}
 
-	private function getRoute(array $routeSettings) {
+	private function getRoute($routeSettings, $route) {
 		$this->dice->addRule('$View', (array) $routeSettings->view);
 
 		if (isset($routeSettings->model)) {
@@ -78,7 +79,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 			if ($routeSettings->action == '$1') {
 				$action = isset($route[0]) && method_exists($controllerRule['instanceOf'], $route[0]) ? array_shift($route) : $routeSettings->defaultAction;
 			}
-			else $action = $mathedRoute->action;
+			else $action = $routeSettings->action;
 
 			$controllerRule['call'] = [];
 
