@@ -17,7 +17,8 @@ class ModuleJson  implements \Level2\Router\Rule {
 	public function find(array $route) {
 		if (count($route) == 0 || $route[0] == '') return false;
 
-        $config = $this->getConfig($route);
+                $config = $this->getConfig($route);
+		array_shift($route);
 		$method = $this->request->server('REQUEST_METHOD');
 
 
@@ -41,13 +42,13 @@ class ModuleJson  implements \Level2\Router\Rule {
 		return $this->moduleDir . '/' . $moduleName;
 	}
 
-    public function getConfig(&$route) {
-        $moduleName = array_shift($route);
+    	public function getConfig($route) {
+		$moduleName = $route[0] ?? '';
 
-        $directory = $this->getRouteDir($moduleName);
-        $file = $directory . '/' . $this->configFile;
-        return $this->getRouteModuleFile($file);
-    }
+		$directory = $this->getRouteDir($moduleName);
+		$file = $directory . '/' . $this->configFile;
+		return $this->getRouteModuleFile($file);
+    	}
 
 	private function getRouteModuleFile($file) {
 		if (file_exists($file)) {
