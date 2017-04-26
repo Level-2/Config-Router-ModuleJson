@@ -21,7 +21,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 		$method = $this->request->server('REQUEST_METHOD');
 
 
-		if (!isset($route[0]) || (isset($route[0]) && $route[0] == '')) $routeName = isset($config->$method->defaultRoute) ? $config->$method->defaultRoute : 'index';
+		if (empty($route[0]) || !isset($config->$method->{$route[0]})) $routeName = isset($config->$method->defaultRoute) ? $config->$method->defaultRoute : 'index';
 		else $routeName = array_shift($route);
 
 		if (isset($config->$method->$routeName)) {
@@ -33,8 +33,10 @@ class ModuleJson  implements \Level2\Router\Rule {
 				$matchedRoute = (object) array_merge((array)$matchedRoute, (array)$config->$inheritMethod->$routeName);
 			}
 
-			return $this->getRoute($matchedRoute, $route);
 		}
+
+		return $this->getRoute($matchedRoute, $route);
+
 	}
 
 	private function getRouteDir($moduleName) {
