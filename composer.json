@@ -11,7 +11,8 @@
     	}
     ],
     "require": {
-        "php": ">=5.5.0"
+        "php": ">=5.5.0",
+        "level-2/router" : "dev-master"
     },
     "autoload": {
     	"classmap": ["./"]
