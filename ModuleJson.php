@@ -32,11 +32,9 @@ class ModuleJson  implements \Level2\Router\Rule {
 				$inheritMethod = $matchedRoute->inherit;
 				$matchedRoute = (object) array_merge((array)$matchedRoute, (array)$config->$inheritMethod->$routeName);
 			}
-
 		}
 
 		return $this->getRoute($matchedRoute, $route);
-
 	}
 
 	private function getRouteDir($moduleName) {
@@ -53,7 +51,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 
 	private function getRouteModuleFile($file) {
 		if (file_exists($file)) {
-			$config = json_decode(str_replace('{dir}', dirname($file), file_get_contents($file)));
+			$config = json_decode(str_replace('"./', '"' . dirname($file) . DIRECTORY_SEPARATOR, file_get_contents($file)));
 
 			// Extend property
 			if (isset($route->extend)) {
