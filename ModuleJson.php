@@ -70,6 +70,13 @@ class ModuleJson  implements \Level2\Router\Rule {
 			$this->dice->addRule('$Model',  json_decode(json_encode($routeSettings->model), true));
 			$model = $this->dice->create('$Model', [], [$this->request]);
 		}
+		else if (isset($routeSettings->models)) {
+			$model = [];
+			foreach ($routeSettings->models as $name => $diceRule) {
+				$this->dice->addRule('$Model_' . $name, (array) $diceRule);
+				$model[$name] = $this->dice->create('$Model_' . $name, [], [$this->request]);
+			}
+		}
 		else $model = null;
 
 		if (isset($routeSettings->controller)) {
@@ -85,10 +92,14 @@ class ModuleJson  implements \Level2\Router\Rule {
 
 			$controllerRule['call'][] = [$action, $route];
 			$this->dice->addRule('$controller', $controllerRule);
-			$controller = $this->dice->create('$controller', [], [$model, $this->request]);
+			if (is_array($model)) {
+				$controller = $this->dice->create('$Controller', [], array_merge(array_values($model), [$this->request]));
+			}
+			else {
+				$controller = $this->dice->create('$Controller', [], [$model, $this->request]);
+			}
 		}
 		else $controller = null;
-
 
 		$view = $this->dice->create('$View');
 
