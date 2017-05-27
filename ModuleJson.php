@@ -51,7 +51,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 
 	private function getRouteModuleFile($file) {
 		if (file_exists($file)) {
-			$config = json_decode(str_replace('"./', '"' . dirname($file) . DIRECTORY_SEPARATOR, file_get_contents($file)));
+			$config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)));
 
 			// Extend property
 			if (isset($route->extend)) {
