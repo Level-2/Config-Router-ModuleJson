@@ -30,7 +30,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 			// This allows POST to inherit from GET if "inherit" : "GET" is set (or vice versa)
 			if (isset($matchedRoute->inherit) && isset($config->{$matchedRoute->inherit}->$routeName)) {
 				$inheritMethod = $matchedRoute->inherit;
-				$matchedRoute = (object) array_merge((array)$matchedRoute, (array)$config->$inheritMethod->$routeName);
+				$matchedRoute = (object) array_merge((array)$config->$inheritMethod->$routeName, (array)$matchedRoute);
 			}
 		}
 
