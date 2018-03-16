@@ -65,7 +65,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 	}
 	
 	private function getModel($settings, $name = '') {
-		if (class_exists($matchedRoute->model->instanceOf)) {
+		if (class_exists($settings->instanceOf)) {
 			$this->dice->addRule('$Model_' . $name,  json_decode(json_encode($settings), true));
 			$model = $this->dice->create('$Model_' . $name, [], [$this->request]);
 		}
