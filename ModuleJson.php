@@ -63,19 +63,28 @@ class ModuleJson  implements \Level2\Router\Rule {
 		}
 		else return false;
 	}
+	
+	private function getModel($settings, $name = '') {
+		if (class_exists($matchedRoute->model->instanceOf)) {
+			$this->dice->addRule('$Model_' . $name,  json_decode(json_encode($settings), true));
+			$model = $this->dice->create('$Model_' . $name, [], [$this->request]);
+		}
+		else {
+			$model = $this->dice->create($settings->instanceOf);
+		}
+		return $model;
+	}
 
 	private function getRoute($routeSettings, $route) {
 		$this->dice->addRule('$View', (array) $routeSettings->view);
 
 		if (isset($routeSettings->model)) {
-			$this->dice->addRule('$Model',  json_decode(json_encode($routeSettings->model), true));
-			$model = $this->dice->create('$Model', [], [$this->request]);
+			$model = $this->getModel($routeSettings->model);
 		}
 		else if (isset($routeSettings->models)) {
 			$model = [];
 			foreach ($routeSettings->models as $name => $diceRule) {
-				$this->dice->addRule('$Model_' . $name, (array) $diceRule);
-				$model[$name] = $this->dice->create('$Model_' . $name, [], [$this->request]);
+				$model[$name] = $this->getModel($diceRule, $name);
 			}
 		}
 		else $model = null;
