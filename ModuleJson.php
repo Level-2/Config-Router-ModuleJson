@@ -1,5 +1,5 @@
 <?php
-namespace Config\Router;
+namespace Level2\Router\Config;
 class ModuleJson  implements \Level2\Router\Rule {
 	private $moduleDir;
 	private $configFile;
@@ -17,47 +17,49 @@ class ModuleJson  implements \Level2\Router\Rule {
 	public function find(array $route) {
 		if (count($route) == 0 || $route[0] == '') return false;
 
-                $config = $this->getConfig($route);
-		array_shift($route);
-		$method = $this->request->server('REQUEST_METHOD');
+            $config = $this->getConfig($route);
+			array_shift($route);
+			$method = $this->request->server('REQUEST_METHOD');
 
 
-		if (empty($route[0]) || !isset($config->$method->{$route[0]})) $routeName = isset($config->$method->defaultRoute) ? $config->$method->defaultRoute : 'index';
-		else $routeName = array_shift($route);
+			if (empty($route[0]) || !isset($config[$method][$route[0]])) $routeName = $config[$method]['defaultRoute'] ?? 'index';
+			else $routeName = array_shift($route);
 
-		if (isset($config->$method->$routeName)) {
-			$matchedRoute = $config->$method->$routeName;
+			if (isset($config[$method][$routeName])) {
+				$matchedRoute = $config[$method][$routeName];
 
-			// This allows POST to inherit from GET if "inherit" : "GET" is set (or vice versa)
-			if (isset($matchedRoute->inherit) && isset($config->{$matchedRoute->inherit}->$routeName)) {
-				$inheritMethod = $matchedRoute->inherit;
-				$matchedRoute = (object) array_merge((array)$config->$inheritMethod->$routeName, (array)$matchedRoute);
+				// This allows POST to inherit from GET if "inherit" : "GET" is set (or vice versa)
+				if (isset($matchedRoute['inherit']) && isset($config[$matchedRoute->inherit][$routeName])) {
+					$inheritMethod = $matchedRoute['inherit'];
+					$matchedRoute = array_merge($config[$inheritMethod[$routeName]], $matchedRoute);
+				}
 			}
-		}
 
 		return $this->getRoute($matchedRoute, $route);
 	}
 
 	private function getRouteDir($moduleName) {
-		return $this->moduleDir . '/' . $moduleName;
+		$files = glob($this->moduleDir . '/*');
+		$match = preg_grep('/' . $this->moduleDir . '\/' . $moduleName . '/i', $files);
+		return $match[0] ?? false;
 	}
 
-    	public function getConfig($route) {
+	public function getConfig($route) {
 		$moduleName = $route[0] ?? '';
 
 		$directory = $this->getRouteDir($moduleName);
 		$file = $directory . '/' . $this->configFile;
 		return $this->getRouteModuleFile($file);
-    	}
+	}
 
 	private function getRouteModuleFile($file) {
 		if (file_exists($file)) {
-			$config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)));
+			$config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)), true);
 
 			// Extend property
-			if (isset($route->extend)) {
-				$extended = $this->getRouteModuleFile($directory . DIRECTORY_SEPARATOR . $route->extend);
-				$config = (object) array_merge((array)$extended, (array)$config);
+			if (isset($route['extend'])) {
+				$extended = $this->getRouteModuleFile($directory . DIRECTORY_SEPARATOR . $route['extend']);
+				$config = array_merge($extended, $config);
 			}
 			return $config;
 		}
@@ -65,29 +67,29 @@ class ModuleJson  implements \Level2\Router\Rule {
 	}
 
 	private function getRoute($routeSettings, $route) {
-		$this->dice->addRule('$View', (array) $routeSettings->view);
+		$this->dice->addRule('$View', $routeSettings['view']);
 
-		if (isset($routeSettings->model)) {
-			$this->dice->addRule('$Model',  json_decode(json_encode($routeSettings->model), true));
+		if (isset($routeSettings['model'])) {
+			$this->dice->addRule('$Model',  $routeSettings['model']);
 			$model = $this->dice->create('$Model', [], [$this->request]);
 		}
-		else if (isset($routeSettings->models)) {
+		else if (isset($routeSettings['models'])) {
 			$model = [];
-			foreach ($routeSettings->models as $name => $diceRule) {
-				$this->dice->addRule('$Model_' . $name, (array) $diceRule);
+			foreach ($routeSettings['models'] as $name => $diceRule) {
+				$this->dice->addRule('$Model_' . $name, $diceRule);
 				$model[$name] = $this->dice->create('$Model_' . $name, [], [$this->request]);
 			}
 		}
 		else $model = null;
 
-		if (isset($routeSettings->controller)) {
+		if (isset($routeSettings['controller'])) {
 
-			$controllerRule = (array) $routeSettings->controller;
+			$controllerRule = $routeSettings['controller'];
 
-			if ($routeSettings->action == '$1') {
-				$action = isset($route[0]) && method_exists($controllerRule['instanceOf'], $route[0]) ? array_shift($route) : $routeSettings->defaultAction;
+			if ($routeSettings['action'] == '$1') {
+				$action = isset($route[0]) && method_exists($controllerRule['instanceOf'], $route[0]) ? array_shift($route) : $routeSettings['defaultAction'];
 			}
-			else $action = $routeSettings->action;
+			else $action = $routeSettings['action'];
 
 			$controllerRule['call'] = [];
 
