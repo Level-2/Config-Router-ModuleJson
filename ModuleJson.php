@@ -41,7 +41,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 	private function getRouteDir($moduleName) {
 		$files = glob($this->moduleDir . '/*');
 		$match = preg_grep('/' . $this->moduleDir . '\/' . $moduleName . '/i', $files);
-		return $match[0] ?? false;
+		return array_values($match)[0] ?? false;
 	}
 
 	public function getConfig($route) {
