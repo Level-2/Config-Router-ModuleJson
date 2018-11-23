@@ -34,6 +34,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 					$matchedRoute = array_merge($config[$inheritMethod[$routeName]], $matchedRoute);
 				}
 			}
+			else return false;
 
 		return $this->getRoute($matchedRoute, $route);
 	}
