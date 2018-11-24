@@ -29,11 +29,12 @@ class ModuleJson  implements \Level2\Router\Rule {
 				$matchedRoute = $config[$method][$routeName];
 
 				// This allows POST to inherit from GET if "inherit" : "GET" is set (or vice versa)
-				if (isset($matchedRoute['inherit']) && isset($config[$matchedRoute->inherit][$routeName])) {
+				if (isset($matchedRoute['inherit']) && isset($config[$matchedRoute['inherit']][$routeName])) {
 					$inheritMethod = $matchedRoute['inherit'];
-					$matchedRoute = array_merge($config[$inheritMethod[$routeName]], $matchedRoute);
+					$matchedRoute = array_merge($config[$inheritMethod][$routeName], $matchedRoute);
 				}
 			}
+			else return false;
 
 		return $this->getRoute($matchedRoute, $route);
 	}
@@ -41,7 +42,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 	private function getRouteDir($moduleName) {
 		$files = glob($this->moduleDir . '/*');
 		$match = preg_grep('/' . $this->moduleDir . '\/' . $moduleName . '/i', $files);
-		return $match[0] ?? false;
+		return array_values($match)[0] ?? false;
 	}
 
 	public function getConfig($route) {
