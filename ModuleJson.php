@@ -72,13 +72,13 @@ class ModuleJson  implements \Level2\Router\Rule {
 
 		if (isset($routeSettings['model'])) {
 			$this->dice->addRule('$Model',  $routeSettings['model']);
-			$model = $this->dice->create('$Model', [], [$this->request]);
+			$model = $this->dice->create('$Model', []);
 		}
 		else if (isset($routeSettings['models'])) {
 			$model = [];
 			foreach ($routeSettings['models'] as $name => $diceRule) {
 				$this->dice->addRule('$Model_' . $name, $diceRule);
-				$model[$name] = $this->dice->create('$Model_' . $name, [], [$this->request]);
+				$model[$name] = $this->dice->create('$Model_' . $name, []);
 			}
 		}
 		else $model = null;
