@@ -53,19 +53,19 @@ class ModuleJson  implements \Level2\Router\Rule {
 		return $this->getRouteModuleFile($file);
 	}
 
-	private function getRouteModuleFile($file) {
-		if (file_exists($file)) {
-			$config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)), true);
+    private function getRouteModuleFile($file) {
+        if (file_exists($file)) {
+            $config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)), true);
 
-			// Extend property
-			if (isset($config['extend'])) {
-				$extended = $this->getRouteModuleFile(dirname($file) . DIRECTORY_SEPARATOR . $config['extend']);
-				$config = array_merge($extended, $config);
-			}
-			return $config;
-		}
-		else return false;
-	}
+            // Extend property
+            if (isset($config['extend'])) {
+                $extended = $this->getRouteModuleFile($config['extend']);
+                $config = array_merge($extended, $config);
+            }
+            return $config;
+        }
+        else return false;
+    }
 
     private function getModel($settings, $name = '') {
         if (class_exists($settings['instanceOf'])) {
