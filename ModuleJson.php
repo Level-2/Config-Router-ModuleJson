@@ -58,8 +58,8 @@ class ModuleJson  implements \Level2\Router\Rule {
 			$config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)), true);
 
 			// Extend property
-			if (isset($route['extend'])) {
-				$extended = $this->getRouteModuleFile($directory . DIRECTORY_SEPARATOR . $route['extend']);
+			if (isset($config['extend'])) {
+				$extended = $this->getRouteModuleFile(dirname($file) . DIRECTORY_SEPARATOR . $config['extend']);
 				$config = array_merge($extended, $config);
 			}
 			return $config;
