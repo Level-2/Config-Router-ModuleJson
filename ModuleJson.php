@@ -60,11 +60,18 @@ class ModuleJson  implements \Level2\Router\Rule {
             // Extend property
             if (isset($config['extend'])) {
                 $extended = $this->getRouteModuleFile($config['extend']);
-                $config = array_merge($extended, $config);
+                $config = $this->mergeConfig($config, $extended);
             }
             return $config;
         }
         else return false;
+    }
+
+    private function mergeConfig($orig, $ext) {
+        foreach (['GET', 'POST', 'conditions'] as $index) {
+            if (isset($orig[$index]) || isset($ext[$index])) $orig[$index] = array_merge($ext[$index], $orig[$index] ?? []);
+        }
+        return $orig;
     }
 
     private function getModel($settings, $name = '') {
