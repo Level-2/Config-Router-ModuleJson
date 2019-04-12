@@ -1,10 +1,9 @@
 <?php
 namespace Level2\Router\Config;
 class ModuleJson  implements \Level2\Router\Rule {
+    private $dice;
 	private $moduleDir;
 	private $configFile;
-	private $moduleNames;
-	private $jsonLoader;
 	private $request;
 
 	public function __construct(\Dice\Dice $dice, \Level2\Core\Request $request, $moduleDir = 'Modules', $configFile = 'manifest.json') {
@@ -76,7 +75,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 
     private function getModel($settings, $name = '') {
         if (class_exists($settings['instanceOf'])) {
-            $this->dice->addRule('$Model_' . $name,  $settings);
+            $this->dice = $this->dice->addRule('$Model_' . $name,  $settings);
             $model = $this->dice->create('$Model_' . $name, [], []);
         }
         else {
@@ -86,7 +85,7 @@ class ModuleJson  implements \Level2\Router\Rule {
     }
 
 	private function getRoute($routeSettings, $route) {
-		$this->dice->addRule('$View', $routeSettings['view']);
+        $this->dice = $this->dice->addRule('$View', $routeSettings['view']);
 
         if (isset($routeSettings['model'])) {
             $model = $this->getModel($routeSettings['model']);
@@ -113,7 +112,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 			$controllerRule['call'][] = [$action, $route, function ($return) use (&$model) {
 			    if (is_object($return)) $model = $return;
             }];
-			$this->dice->addRule('$controller', $controllerRule);
+            $this->dice = $this->dice->addRule('$controller', $controllerRule);
 			if (is_array($model)) {
 				$controller = $this->dice->create('$Controller', [], array_merge(array_values($model), [$this->request]));
 			}
