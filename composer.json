@@ -12,7 +12,8 @@
     ],
     "require": {
         "php": ">=5.5.0",
-        "level-2/router" : "dev-master"
+        "level-2/router" : "dev-master",
+        "level-2/dice" : "^4.0"
     },
     "autoload": {
     	"classmap": ["./"]

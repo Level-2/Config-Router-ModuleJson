@@ -1,10 +1,9 @@
 <?php
 namespace Level2\Router\Config;
 class ModuleJson  implements \Level2\Router\Rule {
+    private $dice;
 	private $moduleDir;
 	private $configFile;
-	private $moduleNames;
-	private $jsonLoader;
 	private $request;
 
 	public function __construct(\Dice\Dice $dice, \Level2\Core\Request $request, $moduleDir = 'Modules', $configFile = 'manifest.json') {
@@ -41,7 +40,7 @@ class ModuleJson  implements \Level2\Router\Rule {
 
 	private function getRouteDir($moduleName) {
 		$files = glob($this->moduleDir . '/*');
-		$match = preg_grep('/' . $this->moduleDir . '\/' . $moduleName . '/i', $files);
+		$match = preg_grep('/^' . $this->moduleDir . '\/' . $moduleName . '$/i', $files);
 		return array_values($match)[0] ?? false;
 	}
 
@@ -53,35 +52,51 @@ class ModuleJson  implements \Level2\Router\Rule {
 		return $this->getRouteModuleFile($file);
 	}
 
-	private function getRouteModuleFile($file) {
-		if (file_exists($file)) {
-			$config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)), true);
+    private function getRouteModuleFile($file) {
+        if (file_exists($file)) {
+            $config = json_decode(str_replace('"./', '"' . dirname($file) . '/', file_get_contents($file)), true);
 
-			// Extend property
-			if (isset($route['extend'])) {
-				$extended = $this->getRouteModuleFile($directory . DIRECTORY_SEPARATOR . $route['extend']);
-				$config = array_merge($extended, $config);
-			}
-			return $config;
-		}
-		else return false;
-	}
+            // Extend property
+            if (isset($config['extend'])) {
+                $extended = $this->getRouteModuleFile($config['extend']);
+                $config = $this->mergeConfig($config, $extended);
+            }
+            return $config;
+        }
+        else return false;
+    }
+
+    private function mergeConfig($orig, $ext) {
+        foreach (['GET', 'POST', 'conditions'] as $index) {
+            if (isset($orig[$index]) || isset($ext[$index])) $orig[$index] = array_merge($ext[$index], $orig[$index] ?? []);
+        }
+        return $orig;
+    }
+
+    private function getModel($settings, $name = '') {
+        if (class_exists($settings['instanceOf'])) {
+            $this->dice = $this->dice->addRule('$Model_' . $name,  $settings);
+            $model = $this->dice->create('$Model_' . $name, [], []);
+        }
+        else {
+            $model = $this->dice->create($settings['instanceOf']);
+        }
+        return $model;
+    }
 
 	private function getRoute($routeSettings, $route) {
-		$this->dice->addRule('$View', $routeSettings['view']);
+        $this->dice = $this->dice->addRule('$View', $routeSettings['view']);
 
-		if (isset($routeSettings['model'])) {
-			$this->dice->addRule('$Model',  $routeSettings['model']);
-			$model = $this->dice->create('$Model', [], [$this->request]);
-		}
-		else if (isset($routeSettings['models'])) {
-			$model = [];
-			foreach ($routeSettings['models'] as $name => $diceRule) {
-				$this->dice->addRule('$Model_' . $name, $diceRule);
-				$model[$name] = $this->dice->create('$Model_' . $name, [], [$this->request]);
-			}
-		}
-		else $model = null;
+        if (isset($routeSettings['model'])) {
+            $model = $this->getModel($routeSettings['model']);
+        }
+        else if (isset($routeSettings['models'])) {
+            $model = [];
+            foreach ($routeSettings['models'] as $name => $diceRule) {
+                $model[$name] = $this->getModel($diceRule, $name);
+            }
+        }
+        else $model = null;
 
 		if (isset($routeSettings['controller'])) {
 
@@ -94,8 +109,10 @@ class ModuleJson  implements \Level2\Router\Rule {
 
 			$controllerRule['call'] = [];
 
-			$controllerRule['call'][] = [$action, $route];
-			$this->dice->addRule('$controller', $controllerRule);
+			$controllerRule['call'][] = [$action, $route, function ($return) use (&$model) {
+			    if (is_object($return)) $model = $return;
+            }];
+            $this->dice = $this->dice->addRule('$controller', $controllerRule);
 			if (is_array($model)) {
 				$controller = $this->dice->create('$Controller', [], array_merge(array_values($model), [$this->request]));
 			}
